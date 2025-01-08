@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
-
+    "strings"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -22,12 +22,6 @@ type Button struct {
 	action int
 }
 
-func drawGUI() {
-	rl.DrawText("Congrats! You created your first window!", 190, 200, 20, rl.LightGray)
-	rl.DrawText("Line two", 190, 220, 20, rl.LightGray)
-	x_pos := int32(375 * (1 + math.Sin(rl.GetTime())))
-	rl.DrawRectangleGradientV(x_pos, 200, 50, 50, rl.Red, rl.Blue)
-}
 
 func drawButtons(buttons []Button) {
 	for _, button := range buttons {
@@ -79,6 +73,10 @@ func takeToken(wildingTokens *[9]int, tokenCount *int) int {
 	return -1
 }
 
+func textCentered(text string, x, y, size int32, color rl.Color) {
+	rl.DrawText(text, x-int32(int(size)*len(text)/4), y, size, color)
+}
+
 func getTexture(token int, textures [6]rl.Texture2D) (rl.Texture2D, rl.Texture2D) {
 	var texture, texture_type rl.Texture2D
 	switch token / 3 {
@@ -118,8 +116,8 @@ func main() {
 
 	var screenWidth int32 = 800
 	var screenHeight int32 = 450
-	wildingTokens := [9]int{8, 4, 4, 8, 4, 4, 8, 4, 4}
-	tokenCount := 48
+	wildingTokens := [9]int{12, 4, 3, 12, 4, 3, 12, 4, 3}
+	tokenCount := 57
 	lastDraw := 0
 	lastDrawTime := -1000.0
 
@@ -162,7 +160,14 @@ func main() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.RayWhite)
 
-		drawGUI()
+		//GUI
+		textCentered("Game of thrones token generator", screenWidth/2-10, 80, 20, rl.LightGray)
+		x_pos := int32(375 * (1 + math.Sin(rl.GetTime())))
+		rl.DrawRectangleGradientV(x_pos, 240, 50, 50, rl.Red, rl.Blue)
+
+		textCentered(strings.Trim(strings.Replace(fmt.Sprint(wildingTokens), " ", ",", -1), "[]"), screenWidth/2+5, 350, 16, rl.LightGray)
+		textCentered(fmt.Sprint(tokenCount)+ " left", screenWidth/2, 370, 16, rl.LightGray)
+
 		drawButtons(buttons)
 
 		if rl.IsMouseButtonReleased(rl.MouseLeftButton) {
@@ -174,8 +179,8 @@ func main() {
 					switch button.action {
 					case RESET:
 						fmt.Println("Tokens reset!")
-						wildingTokens = [9]int{8, 4, 4, 8, 4, 4, 8, 4, 4}
-						tokenCount = 48
+						wildingTokens = [9]int{12, 4, 3, 12, 4, 3, 12, 4, 3}
+						tokenCount = 57
 						foundTokenNames = []int{}
 						lastDraw = 0
 						lastDrawTime = -1000.0
