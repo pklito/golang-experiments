@@ -79,12 +79,49 @@ func takeToken(wildingTokens *[9]int, tokenCount *int) int {
 	return -1
 }
 
+func getTexture(token int, textures [6]rl.Texture2D) (rl.Texture2D, rl.Texture2D) {
+	var texture, texture_type rl.Texture2D
+	switch token / 3 {
+	case 0:
+		texture = textures[0] //foot_texture
+	case 1:
+		texture = textures[1] //cave_texture
+	case 2:
+		texture = textures[2] //ladder_texture
+	}
+
+	switch token % 3 {
+	case 0:
+		texture_type = textures[3] //regular_texture
+	case 1:
+		texture_type = textures[4] //climber_texture
+	case 2:
+		texture_type = textures[5] //giant_texture
+	}
+	return texture, texture_type
+}
+
+func drawBigToken(centerX, centerY int32, token int, textures [6]rl.Texture2D) {
+	var texture_camp rl.Texture2D
+	var texture_type rl.Texture2D
+	texture_camp, texture_type = getTexture(token, textures)
+	var scale float32 = 3
+	var offset int32 = -60
+	rl.DrawRectangleRounded(rl.Rectangle{X: float32(centerX - int32(scale*12.5)), Y: float32(centerY - int32(scale*12.5) + offset), Width: 25 * scale, Height: 25 * scale}, 0.5, 0, rl.Gray)
+	rl.DrawRectangleRounded(rl.Rectangle{X: float32(centerX - int32(scale*11)), Y: float32(centerY - int32(scale*11) + offset), Width: 22 * scale, Height: 22 * scale}, 0.5, 0, rl.LightGray)
+
+	rl.DrawTextureEx(texture_camp, rl.Vector2{X: float32(centerX-int32(scale*10)), Y: float32(centerY-int32(scale*10)+offset)}, 0, scale, rl.White)
+	rl.DrawTextureEx(texture_type, rl.Vector2{X: float32(centerX+int32(15*scale)-int32(scale*10)), Y: float32(centerY-int32(scale*10)+offset)}, 0, scale/2, rl.White)
+}
+
 func main() {
 
 	var screenWidth int32 = 800
 	var screenHeight int32 = 450
 	wildingTokens := [9]int{8, 4, 4, 8, 4, 4, 8, 4, 4}
 	tokenCount := 48
+	lastDraw := 0
+	lastDrawTime := -1000.0
 
 	foundTokenNames := []int{}
 
@@ -140,11 +177,15 @@ func main() {
 						wildingTokens = [9]int{8, 4, 4, 8, 4, 4, 8, 4, 4}
 						tokenCount = 48
 						foundTokenNames = []int{}
+						lastDraw = 0
+						lastDrawTime = -1000.0
 
 					case DRAW_1:
 						token := takeToken(&wildingTokens, &tokenCount)
 						foundTokenNames = append(foundTokenNames, token)
 						fmt.Println("Drew:", getTokenName(token))
+						lastDraw = 1
+						lastDrawTime = rl.GetTime()
 
 					case DRAW_2:
 						token := takeToken(&wildingTokens, &tokenCount)
@@ -153,36 +194,44 @@ func main() {
 						token = takeToken(&wildingTokens, &tokenCount)
 						foundTokenNames = append(foundTokenNames, token)
 						fmt.Println("Drew:", getTokenName(token))
+						lastDraw = 2
+						lastDrawTime = rl.GetTime()
 					}
 					break
 				}
 
 			}
 		}
-		for i, token := range foundTokenNames {
-			var texture rl.Texture2D
-			var texture_type rl.Texture2D
 
-			switch token / 3 {
-			case 0:
-				texture = foot_texture
-			case 1:
-				texture = cave_texture
-			case 2:
-				texture = ladder_texture
+		// Lightblue box around last draws
+		switch lastDraw {
+		case 1:
+			rl.DrawRectangle(10, 10, 45, 20, rl.SkyBlue)
+		case 2:
+			rl.DrawRectangle(10, 10, 45, 40, rl.SkyBlue)
+		}
+
+		// Draw last 20 tokens
+		for i := len(foundTokenNames) - 1; i >= max(0, len(foundTokenNames)-19); i-- {
+			token := foundTokenNames[i]
+
+			texture_camp, texture_type := getTexture(token, [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
+
+			height := int32(len(foundTokenNames) - i - 1)
+			rl.DrawTexture(texture_camp, 10, 10+height*20, rl.ColorAlpha(rl.White, 1.1-(float32(height-13)/5.0)))
+			rl.DrawTexture(texture_type, 35, 10+height*20, rl.ColorAlpha(rl.White, 1.1-(float32(height-13)/5.0)))
+
+		}
+
+		// Draw the tokens largely in the center
+		if lastDrawTime+100000 > rl.GetTime() {
+			if lastDraw == 1 {
+				drawBigToken(screenWidth/2, screenHeight/2, foundTokenNames[len(foundTokenNames)-1], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
 			}
-
-			switch token % 3 {
-			case 0:
-				texture_type = regular_texture
-			case 1:
-				texture_type = climber_texture
-			case 2:
-				texture_type = giant_texture
+			if lastDraw == 2 {
+				drawBigToken(screenWidth/2-80, screenHeight/2, foundTokenNames[len(foundTokenNames)-1], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
+				drawBigToken(screenWidth/2+80, screenHeight/2, foundTokenNames[len(foundTokenNames)-2], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
 			}
-			rl.DrawTexture(texture, 10, 10+int32(i)*20, rl.White)
-			rl.DrawTexture(texture_type, 35, 10+int32(i)*20, rl.White)
-
 		}
 
 		rl.EndDrawing()
