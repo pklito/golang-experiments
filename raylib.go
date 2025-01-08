@@ -23,11 +23,15 @@ type Button struct {
 	action	 int
 }
 
-func drawGUI() {
+func drawGUI(tokenNames []string) {
 	rl.DrawText("Congrats! You created your first window!", 190, 200, 20, rl.LightGray)
 	rl.DrawText("Line two", 190, 220, 20, rl.LightGray)
 	x_pos := int32(375 * (1 + math.Sin(rl.GetTime())))
 	rl.DrawRectangleGradientV(x_pos, 200, 50, 50, rl.Red, rl.Blue)
+
+	for i, tokenName := range tokenNames {
+		rl.DrawText(tokenName, 20, 20 + int32(i * 20), 20, rl.Black)
+	}
 	// test_image := rl.LoadImage("test.png")
 	// texture := rl.LoadTextureFromImage(test_image);
 	// rl.DrawTexture(texture, 50, 50, rl.White)
@@ -83,31 +87,6 @@ func takeToken(wildingTokens *[9]int, tokenCount *int) int{
 	return -1
 }
 
-func handleButtons(buttons []Button, wildingTokens *[9]int, tokenCount *int) {
-	if rl.IsMouseButtonReleased(rl.MouseLeftButton) {
-		for i := len(buttons) - 1; i >= 0; i-- {
-			button := buttons[i]
-			if rl.GetMousePosition().X >= float32(button.x) && rl.GetMousePosition().X <= float32(button.x+button.width) && rl.GetMousePosition().Y >= float32(button.y) && rl.GetMousePosition().Y <= float32(button.y+button.height) {
-				fmt.Println("Pressed ", button.text)
-
-				switch button.action {
-				case RESET:
-					fmt.Println("Tokens reset!")
-					*wildingTokens = [9]int{8,4,4,8,4,4,8,4,4}
-					*tokenCount = 48
-				case DRAW_1:
-					fmt.Println("Drew:", getTokenName(takeToken(wildingTokens, tokenCount)))
-				case DRAW_2:
-					fmt.Println("Drew:", getTokenName(takeToken(wildingTokens, tokenCount)))
-					fmt.Println("Drew:", getTokenName(takeToken(wildingTokens, tokenCount)))
-				}
-				break
-			}
-
-		}
-	}
-}
-
 func main() {
 	var screenWidth int32 = 800
 	var screenHeight int32 = 450
@@ -130,9 +109,39 @@ func main() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.RayWhite)
 
-		drawGUI()
+		drawGUI(foundTokenNames)
 		drawButtons(buttons)
-		handleButtons(buttons, &wildingTokens, &tokenCount)
+
+		if rl.IsMouseButtonReleased(rl.MouseLeftButton) {
+			for i := len(buttons) - 1; i >= 0; i-- {
+				button := buttons[i]
+				if rl.GetMousePosition().X >= float32(button.x) && rl.GetMousePosition().X <= float32(button.x+button.width) && rl.GetMousePosition().Y >= float32(button.y) && rl.GetMousePosition().Y <= float32(button.y+button.height) {
+					fmt.Println("Pressed ", button.text)
+	
+					switch button.action {
+					case RESET:
+						fmt.Println("Tokens reset!")
+						wildingTokens = [9]int{8,4,4,8,4,4,8,4,4}
+						tokenCount = 48
+						
+					case DRAW_1:
+						token := takeToken(&wildingTokens, &tokenCount)
+						foundTokenNames = append(foundTokenNames, getTokenName(token))
+						fmt.Println("Drew:", token)
+
+					case DRAW_2:
+						token := takeToken(&wildingTokens, &tokenCount)
+						foundTokenNames = append(foundTokenNames, getTokenName(token))
+						fmt.Println("Drew:", token)
+						token = takeToken(&wildingTokens, &tokenCount)
+						foundTokenNames = append(foundTokenNames, getTokenName(token))
+						fmt.Println("Drew:", token)
+					}
+					break
+				}
+	
+			}
+		}
 
 		rl.EndDrawing()
 	}
