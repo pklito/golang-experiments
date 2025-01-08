@@ -103,6 +103,18 @@ func main() {
 	rl.UnloadImage(ladder_image)
 	rl.UnloadImage(cave_image)
 
+	regular_image := rl.LoadImage("regular.png")
+	climber_image := rl.LoadImage("climber.png")
+	giant_image := rl.LoadImage("giant.png")
+
+	regular_texture := rl.LoadTextureFromImage(regular_image)
+	climber_texture := rl.LoadTextureFromImage(climber_image)
+	giant_texture := rl.LoadTextureFromImage(giant_image)
+
+	rl.UnloadImage(regular_image)
+	rl.UnloadImage(climber_image)
+	rl.UnloadImage(giant_image)
+
 	rl.SetTargetFPS(60)
 	buttons := []Button{}
 	buttons = append(buttons, Button{x: screenWidth - 100, y: screenHeight - 50, width: 80, height: 30, text: "Reset", action: RESET},
@@ -149,6 +161,8 @@ func main() {
 		}
 		for i, token := range foundTokenNames {
 			var texture rl.Texture2D
+			var texture_type rl.Texture2D
+
 			switch token / 3 {
 			case 0:
 				texture = foot_texture
@@ -157,17 +171,18 @@ func main() {
 			case 2:
 				texture = ladder_texture
 			}
-			var name string
+
 			switch token % 3 {
 			case 0:
-				name += "infantry"
+				texture_type = regular_texture
 			case 1:
-				name += "climber"
+				texture_type = climber_texture
 			case 2:
-				name += "giant"
+				texture_type = giant_texture
 			}
 			rl.DrawTexture(texture, 10, 10+int32(i)*20, rl.White)
-			rl.DrawText(name, 35, 10+int32(i)*20, 20, rl.Black)
+			rl.DrawTexture(texture_type, 35, 10+int32(i)*20, rl.White)
+
 		}
 
 		rl.EndDrawing()
