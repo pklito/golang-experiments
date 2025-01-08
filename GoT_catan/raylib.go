@@ -110,8 +110,8 @@ func drawBigToken(centerX, centerY int32, token int, textures [6]rl.Texture2D) {
 	rl.DrawRectangleRounded(rl.Rectangle{X: float32(centerX - int32(scale*12.5)), Y: float32(centerY - int32(scale*12.5) + offset), Width: 25 * scale, Height: 25 * scale}, 0.5, 0, rl.Gray)
 	rl.DrawRectangleRounded(rl.Rectangle{X: float32(centerX - int32(scale*11)), Y: float32(centerY - int32(scale*11) + offset), Width: 22 * scale, Height: 22 * scale}, 0.5, 0, rl.LightGray)
 
-	rl.DrawTextureEx(texture_camp, rl.Vector2{X: float32(centerX-int32(scale*10)), Y: float32(centerY-int32(scale*10)+offset)}, 0, scale, rl.White)
-	rl.DrawTextureEx(texture_type, rl.Vector2{X: float32(centerX+int32(15*scale)-int32(scale*10)), Y: float32(centerY-int32(scale*10)+offset)}, 0, scale/2, rl.White)
+	rl.DrawTextureEx(texture_camp, rl.Vector2{X: float32(centerX - int32(scale*10)), Y: float32(centerY - int32(scale*10) + offset)}, 0, scale, rl.White)
+	rl.DrawTextureEx(texture_type, rl.Vector2{X: float32(centerX + int32(15*scale) - int32(scale*10)), Y: float32(centerY - int32(scale*10) + offset)}, 0, scale/2, rl.White)
 }
 
 func main() {
