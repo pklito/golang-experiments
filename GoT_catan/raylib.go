@@ -28,6 +28,7 @@ type Action struct {
 	action int
 	state [9]int
 	tokenCount int
+	tokensDrawn int
 	foundTokenNames []int
 }
 
@@ -128,7 +129,6 @@ func main() {
 	wildingTokens := [9]int{12, 4, 3, 12, 4, 3, 12, 4, 3}
 	tokenCount := 57
 	lastDraw := 0
-	lastDrawTime := -1000.0
 
 	foundTokenNames := []int{}
 	undoList := []Action{}
@@ -189,13 +189,14 @@ func main() {
 				if rl.GetMousePosition().X >= float32(button.x) && rl.GetMousePosition().X <= float32(button.x+button.width) && rl.GetMousePosition().Y >= float32(button.y) && rl.GetMousePosition().Y <= float32(button.y+button.height) {
 					//Save state
 					
-					if len(undoList) > 20 {
-						undoList = undoList[len(undoList)-20:]
+					undoLength := 100
+					if len(undoList) > undoLength {
+						undoList = undoList[len(undoList)-undoLength:]
 					}
 
 					if button.action != UNDO && button.action != REDO {
 						redoList = []Action{}
-						action := Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, foundTokenNames: foundTokenNames}
+						action := Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, tokensDrawn: lastDraw, foundTokenNames: foundTokenNames}
 						undoList = append(undoList, action)
 					}
 
@@ -208,14 +209,12 @@ func main() {
 						tokenCount = 57
 						foundTokenNames = []int{}
 						lastDraw = 0
-						lastDrawTime = -1000.0
 
 					case DRAW_1:
 						token := takeToken(&wildingTokens, &tokenCount)
 						foundTokenNames = append(foundTokenNames, token)
 						fmt.Println("Drew:", getTokenName(token))
 						lastDraw = 1
-						lastDrawTime = rl.GetTime()
 
 					case DRAW_2:
 						token := takeToken(&wildingTokens, &tokenCount)
@@ -225,27 +224,24 @@ func main() {
 						foundTokenNames = append(foundTokenNames, token)
 						fmt.Println("Drew:", getTokenName(token))
 						lastDraw = 2
-						lastDrawTime = rl.GetTime()
 					case UNDO:
 						if len(undoList) > 0 {
 							fmt.Println("Undo", undoList)
-							redoList = append(redoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, foundTokenNames: foundTokenNames})
+							redoList = append(redoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, tokensDrawn: lastDraw, foundTokenNames: foundTokenNames})
 							wildingTokens = undoList[len(undoList)-1].state
 							tokenCount = undoList[len(undoList)-1].tokenCount
 							foundTokenNames = undoList[len(undoList)-1].foundTokenNames
-							lastDraw = 0
-							lastDrawTime = rl.GetTime()
+							lastDraw = undoList[len(undoList)-1].tokensDrawn
 							undoList = undoList[:len(undoList)-1]						
 						}
 					case REDO:
 						if len(redoList) > 0 {
 							fmt.Println("Redo", redoList[len(redoList)-1])
-							undoList = append(undoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, foundTokenNames: foundTokenNames})
+							undoList = append(undoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, tokensDrawn: lastDraw, foundTokenNames: foundTokenNames})
 							wildingTokens = redoList[len(redoList)-1].state
 							tokenCount = redoList[len(redoList)-1].tokenCount
 							foundTokenNames = redoList[len(redoList)-1].foundTokenNames
-							lastDraw = 0
-							lastDrawTime = rl.GetTime()
+							lastDraw = redoList[len(redoList)-1].tokensDrawn
 							redoList = redoList[:len(redoList)-1]	
 						}
 					}
@@ -276,15 +272,14 @@ func main() {
 		}
 
 		// Draw the tokens largely in the center
-		if lastDrawTime+100000 > rl.GetTime() {
-			if lastDraw == 1 {
-				drawBigToken(screenWidth/2, screenHeight/2, foundTokenNames[len(foundTokenNames)-1], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
-			}
-			if lastDraw == 2 {
-				drawBigToken(screenWidth/2-80, screenHeight/2, foundTokenNames[len(foundTokenNames)-1], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
-				drawBigToken(screenWidth/2+80, screenHeight/2, foundTokenNames[len(foundTokenNames)-2], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
-			}
+		if lastDraw == 1 {
+			drawBigToken(screenWidth/2, screenHeight/2, foundTokenNames[len(foundTokenNames)-1], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
 		}
+		if lastDraw == 2 {
+			drawBigToken(screenWidth/2-80, screenHeight/2, foundTokenNames[len(foundTokenNames)-1], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
+			drawBigToken(screenWidth/2+80, screenHeight/2, foundTokenNames[len(foundTokenNames)-2], [6]rl.Texture2D{foot_texture, cave_texture, ladder_texture, regular_texture, climber_texture, giant_texture})
+		}
+
 
 		rl.EndDrawing()
 	}
