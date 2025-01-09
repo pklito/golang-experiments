@@ -226,7 +226,6 @@ func main() {
 						lastDraw = 2
 					case UNDO:
 						if len(undoList) > 0 {
-							fmt.Println("Undo", undoList)
 							redoList = append(redoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, tokensDrawn: lastDraw, foundTokenNames: foundTokenNames})
 							wildingTokens = undoList[len(undoList)-1].state
 							tokenCount = undoList[len(undoList)-1].tokenCount
@@ -236,7 +235,6 @@ func main() {
 						}
 					case REDO:
 						if len(redoList) > 0 {
-							fmt.Println("Redo", redoList[len(redoList)-1])
 							undoList = append(undoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, tokensDrawn: lastDraw, foundTokenNames: foundTokenNames})
 							wildingTokens = redoList[len(redoList)-1].state
 							tokenCount = redoList[len(redoList)-1].tokenCount
