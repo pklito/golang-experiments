@@ -11,6 +11,8 @@ const (
 	RESET = iota
 	DRAW_1
 	DRAW_2
+	UNDO
+	REDO
 )
 
 type Button struct {
@@ -20,6 +22,13 @@ type Button struct {
 	height int32
 	text   string
 	action int
+}
+
+type Action struct {
+	action int
+	state [9]int
+	tokenCount int
+	foundTokenNames []int
 }
 
 
@@ -122,6 +131,8 @@ func main() {
 	lastDrawTime := -1000.0
 
 	foundTokenNames := []int{}
+	undoList := []Action{}
+	redoList := []Action{}
 
 	rl.InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window")
 	defer rl.CloseWindow()
@@ -154,7 +165,9 @@ func main() {
 	buttons := []Button{}
 	buttons = append(buttons, Button{x: screenWidth - 100, y: screenHeight - 50, width: 80, height: 30, text: "Reset", action: RESET},
 		Button{x: 20, y: screenHeight - 50, width: 100, height: 30, text: "Draw 1", action: DRAW_1},
-		Button{x: 130, y: screenHeight - 50, width: 100, height: 30, text: "Draw 2", action: DRAW_2})
+		Button{x: 130, y: screenHeight - 50, width: 100, height: 30, text: "Draw 2", action: DRAW_2},
+		Button{x: screenWidth - 210, y: screenHeight - 44, width: 50, height: 24, text: "undo", action: UNDO},
+		Button{x: screenWidth - 160, y: screenHeight - 44, width: 50, height: 24, text: "redo", action: REDO})
 
 	for !rl.WindowShouldClose() {
 		rl.BeginDrawing()
@@ -174,6 +187,18 @@ func main() {
 			for i := len(buttons) - 1; i >= 0; i-- {
 				button := buttons[i]
 				if rl.GetMousePosition().X >= float32(button.x) && rl.GetMousePosition().X <= float32(button.x+button.width) && rl.GetMousePosition().Y >= float32(button.y) && rl.GetMousePosition().Y <= float32(button.y+button.height) {
+					//Save state
+					
+					if len(undoList) > 20 {
+						undoList = undoList[len(undoList)-20:]
+					}
+
+					if button.action != UNDO && button.action != REDO {
+						redoList = []Action{}
+						action := Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, foundTokenNames: foundTokenNames}
+						undoList = append(undoList, action)
+					}
+
 					fmt.Println("Pressed ", button.text)
 
 					switch button.action {
@@ -201,6 +226,28 @@ func main() {
 						fmt.Println("Drew:", getTokenName(token))
 						lastDraw = 2
 						lastDrawTime = rl.GetTime()
+					case UNDO:
+						if len(undoList) > 0 {
+							fmt.Println("Undo", undoList)
+							redoList = append(redoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, foundTokenNames: foundTokenNames})
+							wildingTokens = undoList[len(undoList)-1].state
+							tokenCount = undoList[len(undoList)-1].tokenCount
+							foundTokenNames = undoList[len(undoList)-1].foundTokenNames
+							lastDraw = 0
+							lastDrawTime = rl.GetTime()
+							undoList = undoList[:len(undoList)-1]						
+						}
+					case REDO:
+						if len(redoList) > 0 {
+							fmt.Println("Redo", redoList[len(redoList)-1])
+							undoList = append(undoList, Action{action: button.action, state: wildingTokens, tokenCount: tokenCount, foundTokenNames: foundTokenNames})
+							wildingTokens = redoList[len(redoList)-1].state
+							tokenCount = redoList[len(redoList)-1].tokenCount
+							foundTokenNames = redoList[len(redoList)-1].foundTokenNames
+							lastDraw = 0
+							lastDrawTime = rl.GetTime()
+							redoList = redoList[:len(redoList)-1]	
+						}
 					}
 					break
 				}
